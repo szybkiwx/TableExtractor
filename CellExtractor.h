@@ -20,6 +20,11 @@ namespace te {
 		}
 	};
 
+	struct Blob {
+		cv::Point point;
+		int area;
+	};
+
 	class CellExtractor {
 	public:
 		CellExtractor(std::shared_ptr<LineDetector>);
@@ -28,9 +33,12 @@ namespace te {
 		Mesh smoothenMesh(Mesh mesh, cv::Size size);
 		cv::Mat sobel(cv::Mat src);
 		void horizDensity(cv::Mat src);
+		Blob findBiggestBlob(cv::Mat image);
+		cv::Mat preprocessImage(cv::Mat originalImage, cv::Mat dilationKernel);
+		cv::Mat floodFillCells(cv::Mat image, Blob biggestBlob);
 	private:
 		std::shared_ptr<LineDetector> _lineDetector;
-
+		
 	};
 }
 

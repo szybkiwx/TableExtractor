@@ -23,8 +23,6 @@ double te::SkewCorrector::calculateAngle(cv::Mat originalImage)
 	cv::equalizeHist(originalImage, eqalized);
 	cv::GaussianBlur(eqalized, eqalized, cv::Size(11, 11), 0);
 	auto lines = _lineDetector->getLinesFromImage(eqalized);
-	_lineDetector->dumpLines(originalImage, lines);
-	cv::waitKey();
 	return findBestFit(lines);
 }
 

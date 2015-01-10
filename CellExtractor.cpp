@@ -10,22 +10,77 @@ CellExtractor::CellExtractor(std::shared_ptr<LineDetector> ld) : _lineDetector(l
 CellMatrix te::CellExtractor::getMatrix(cv::Mat src)
 {
 	CellMatrix mat;
-	cv::Mat cannyImage;
-	int gauss = 11;
-	
-	cv::Mat destination = src.clone();
-	
-	cv::GaussianBlur(src, src, cv::Size(gauss, gauss), 0, 0);
-	adaptiveThreshold(src, destination, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 2);
-	cv::bitwise_not(destination, destination);
-	cv::Mat kernel = (cv::Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
-	cv::bitwise_not(destination, destination);
-	cv::dilate(destination, destination, kernel);
 
-	cv::imshow("", destination);
+
+
+	cv::Mat kernel = (cv::Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
+
+	cv::Mat preprocessedImage = preprocessImage(src, kernel);
+
+	Blob biggestBlob = findBiggestBlob(preprocessedImage);
+	cv::Mat clearedGridImage = floodFillCells(preprocessedImage, biggestBlob);
+
+	cv::erode(clearedGridImage, clearedGridImage, kernel);
+	cv::imshow("", clearedGridImage);
 	cv::waitKey(0);
 
 	return mat;
+}
+
+cv::Mat CellExtractor::floodFillCells(cv::Mat preprocessedImage, Blob biggestBlob){
+	cv::floodFill(preprocessedImage, biggestBlob.point, CV_RGB(255, 255, 255));
+	cv::imshow("", preprocessedImage);
+	cv::waitKey();
+	for (int y = 0; y < preprocessedImage.size().height; y++)
+	{
+		uchar* row = preprocessedImage.ptr(y);
+		for (int x = 0; x < preprocessedImage.size().width; x++)
+		{
+			if (row[x] == 64 && x != biggestBlob.point.x && y != biggestBlob.point.y)
+			{
+				int area = cv::floodFill(preprocessedImage, cv::Point(x, y), CV_RGB(0, 0, 0));
+			}
+		}
+	}
+
+	return preprocessedImage;
+}
+
+cv::Mat CellExtractor::preprocessImage(cv::Mat originalImage, cv::Mat dilationKernel) {
+	int gauss = 11;
+	cv::Mat destination = originalImage.clone();
+	cv::GaussianBlur(originalImage, originalImage, cv::Size(gauss, gauss), 0, 0);
+	cv::adaptiveThreshold(originalImage, destination, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 2);
+	cv::bitwise_not(destination, destination);
+	cv::dilate(destination, destination, dilationKernel);
+	return destination;
+}
+Blob CellExtractor::findBiggestBlob(cv::Mat image){
+	int count = 0;
+	Blob blob;
+	blob.area = -1;
+
+	for (int y = 0; y < image.size().height; y++)
+	{
+		uchar *row = image.ptr(y);
+		for (int x = 0; x < image.size().width; x++)
+		{
+			if (row[x] > 128)
+			{
+				int area = floodFill(image, cv::Point(x, y), CV_RGB(0, 0, 64));
+				
+				cv::waitKey();
+				if (area > blob.area)
+				{
+					blob.point = cv::Point(x, y);
+					blob.area = area;
+				}
+			}
+		}
+
+	}
+
+	return blob;
 }
 
 Mesh CellExtractor::getMesh(std::vector<Line> lines)
@@ -49,6 +104,8 @@ Mesh CellExtractor::getMesh(std::vector<Line> lines)
 	return mesh;
 }
 
+
+
 Mesh CellExtractor::smoothenMesh(Mesh mesh, cv::Size size)
 {
 	Mesh newMesh;
@@ -56,9 +113,9 @@ Mesh CellExtractor::smoothenMesh(Mesh mesh, cv::Size size)
 
 	std::vector<Line> filterdHorizontalLines;
 	std::sort(horizontalLines.begin(), horizontalLines.end(), [](Line a, Line b) { return a[1] < b[1];  });
-	
+
 	double lastValue = 0;
-	for (auto line: horizontalLines) {
+	for (auto line : horizontalLines) {
 		if (lastValue < 0.000000000001 || abs(line[1] - lastValue) > 20) {
 			Line copy(line);
 			copy[0] = 0;
@@ -69,7 +126,7 @@ Mesh CellExtractor::smoothenMesh(Mesh mesh, cv::Size size)
 		lastValue = line[1];
 	}
 
-	newMesh.horizontalLines = filterdHorizontalLines; 
+	newMesh.horizontalLines = filterdHorizontalLines;
 	newMesh.verticalLines = mesh.verticalLines;
 
 	return newMesh;
@@ -87,7 +144,7 @@ cv::Mat CellExtractor::sobel(cv::Mat src)
 
 	GaussianBlur(src, src, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
 
-	
+
 	/// Create window
 	cv::namedWindow(window_name, CV_WINDOW_AUTOSIZE);
 
@@ -112,7 +169,7 @@ cv::Mat CellExtractor::sobel(cv::Mat src)
 }
 
 void  CellExtractor::horizDensity(cv::Mat src){
-	
+
 	std::vector<int> accumulators;
 	int max = 0;
 	for (int i = 0; i < src.rows; i++)
@@ -132,7 +189,7 @@ void  CellExtractor::horizDensity(cv::Mat src){
 
 	int plot_size = 300;
 	cv::Mat plot((int)accumulators.size(), plot_size, CV_8UC1);
-	
+
 
 	int i = 0;
 	for (int acc : accumulators) {
@@ -144,3 +201,5 @@ void  CellExtractor::horizDensity(cv::Mat src){
 	cv::resize(src, src, cv::Size(src.cols / 2, src.rows / 2));
 	cv::imshow("", src);
 }
+
+

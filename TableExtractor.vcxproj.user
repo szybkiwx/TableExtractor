@@ -4,7 +4,7 @@
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>"C:\Users\Andrzej\Documents\Visual Studio 2013\Projects\TableExtractor\Debug\IMG_20141229_210308-2.jpg"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"C:\Users\Andrzej\Documents\Visual Studio 2013\Projects\TableExtractor\Debug\IMG_20150104_020106.jpg"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
