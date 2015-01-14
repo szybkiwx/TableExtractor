@@ -18,6 +18,8 @@ namespace te {
 	private:
 		double diffX();
 		double diffY();
+		cv::Point start();
+		cv::Point end();
 	};
 
 	typedef std::shared_ptr<Line> LinePtr;

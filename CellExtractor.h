@@ -9,7 +9,7 @@
 namespace te {
 	typedef std::vector<std::vector<cv::Mat>> CellMatrix;
 	
-	struct Mesh {
+	struct Grid {
 		std::vector<Line> horizontalLines;
 		std::vector<Line> verticalLines;
 
@@ -18,6 +18,10 @@ namespace te {
 			result.insert(result.end(), verticalLines.begin(), verticalLines.end());
 			return result;
 		}
+	};
+
+	class Mesh {
+
 	};
 
 	struct Blob {
@@ -29,14 +33,17 @@ namespace te {
 	public:
 		CellExtractor(std::shared_ptr<LineDetector>);
 		CellMatrix getMatrix(cv::Mat src);
-		Mesh getMesh(std::vector<Line> lines);
-		Mesh smoothenMesh(Mesh mesh, cv::Size size);
-		cv::Mat sobel(cv::Mat src);
-		void horizDensity(cv::Mat src);
+
+	private:
+		Grid getGrid(std::vector<Line> lines, cv::Size size);
 		Blob findBiggestBlob(cv::Mat image);
 		cv::Mat preprocessImage(cv::Mat originalImage, cv::Mat dilationKernel);
-		cv::Mat floodFillCells(cv::Mat image, Blob biggestBlob);
-	private:
+		cv::Mat getClearedGridImage(cv::Mat preprocessedImage);
+		cv::Mat floodFillCells(cv::Mat image, std::vector<Blob> blobs);
+		std::vector<Blob> findBlobs(cv::Mat image);
+		std::vector<Line> CellExtractor::filterHorizontalLines(std::vector<Line> lines, int maxSize);
+		std::vector<Line> CellExtractor::filterVerticalLines(std::vector<Line> lines, int maxSize);
+		Grid smoothenGrid(Grid mesh, cv::Size size);
 		std::shared_ptr<LineDetector> _lineDetector;
 		
 	};

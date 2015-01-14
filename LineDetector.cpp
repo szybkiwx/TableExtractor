@@ -12,7 +12,7 @@ std::vector<Line> LineDetector::getLinesFromImage(cv::Mat originalImage)
 	//cv::GaussianBlur(originalImage, cannyImage, cv::Size(5, 5), 0);
 	cv::Canny(originalImage, cannyImage, CannyTreshold1, CannyTreshold2);
 	std::vector<cv::Vec4i> lines;
-	HoughLinesP(cannyImage, lines, 1, CV_PI / 180, 100, 100, 20);
+	HoughLinesP(cannyImage, lines, 1, CV_PI / 180, 100, 20, 20);
 	
 	std::vector<Line> result;
 	for (auto line : lines) {

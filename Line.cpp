@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "line.h"
 
-double te::Line::getLength()
+using namespace te;
+
+double Line::getLength()
 {
 	return sqrt(pow(diffY(), 2) + pow(diffX(), 2));
 }
 
-double te::Line::getAngle(AngleMeasure measure)
+double Line::getAngle(AngleMeasure measure)
 {
 	double angle =  atan2(diffY(), diffX());
 	if (measure == Degrees) {
@@ -16,10 +18,19 @@ double te::Line::getAngle(AngleMeasure measure)
 	return angle;
 }
 
-double te::Line::diffX() {
+double Line::diffX() {
 	return (double)(*this)[2] - (double)(*this)[0];
 }
 
-double te::Line::diffY(){
+double Line::diffY(){
 	return (double)(*this)[3] - (double)(*this)[1];
+}
+
+cv::Point Line::start(){
+	cv::Point p((*this)[0], (*this)[1]);
+	return p;
+}
+cv::Point Line::end(){
+	cv::Point p((*this)[2], (*this)[3]);
+	return p;
 }
