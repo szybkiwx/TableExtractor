@@ -15,11 +15,12 @@ namespace te {
 		double getAngle(AngleMeasure measure = Radians);
 		double getLength();
 		using  cv::Vec4i::operator[];
+		cv::Point start();
+		cv::Point end();
 	private:
 		double diffX();
 		double diffY();
-		cv::Point start();
-		cv::Point end();
+		
 	};
 
 	typedef std::shared_ptr<Line> LinePtr;

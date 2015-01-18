@@ -9,6 +9,8 @@
 namespace te {
 	typedef std::vector<std::vector<cv::Mat>> CellMatrix;
 	
+	typedef std::vector<std::vector<cv::Point>> Mesh;
+
 	struct Grid {
 		std::vector<Line> horizontalLines;
 		std::vector<Line> verticalLines;
@@ -17,12 +19,11 @@ namespace te {
 			std::vector<Line> result = horizontalLines;
 			result.insert(result.end(), verticalLines.begin(), verticalLines.end());
 			return result;
-		}
+		};
+		
+		Mesh toMesh();
 	};
 
-	class Mesh {
-
-	};
 
 	struct Blob {
 		cv::Point point;
@@ -35,6 +36,8 @@ namespace te {
 		CellMatrix getMatrix(cv::Mat src);
 
 	private:
+		std::shared_ptr<LineDetector> _lineDetector;
+
 		Grid getGrid(std::vector<Line> lines, cv::Size size);
 		Blob findBiggestBlob(cv::Mat image);
 		cv::Mat preprocessImage(cv::Mat originalImage, cv::Mat dilationKernel);
@@ -44,7 +47,7 @@ namespace te {
 		std::vector<Line> CellExtractor::filterHorizontalLines(std::vector<Line> lines, int maxSize);
 		std::vector<Line> CellExtractor::filterVerticalLines(std::vector<Line> lines, int maxSize);
 		Grid smoothenGrid(Grid mesh, cv::Size size);
-		std::shared_ptr<LineDetector> _lineDetector;
+		CellMatrix getCellsFromMesh(cv::Mat mat, Mesh mesh);
 		
 	};
 }

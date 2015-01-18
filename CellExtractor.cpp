@@ -19,7 +19,14 @@ CellMatrix te::CellExtractor::getMatrix(cv::Mat src)
 	auto lines = _lineDetector->getLinesFromImage(clearedGridImage);
 
 	auto grid = getGrid(lines, src.size());
-	_lineDetector->dumpLines(src, grid.getAll());
+	auto mesh = grid.toMesh();
+	CellMatrix cells = getCellsFromMesh(src, mesh);
+
+	cv::imshow("1", cells[5][6]);
+	cv::imshow("2", cells[5][7]);
+	cv::imshow("3", cells[6][6]);
+	cv::waitKey();
+	//_lineDetector->dumpLines(src, grid.getAll());
 	return mat;
 }
 
@@ -133,16 +140,33 @@ Grid CellExtractor::getGrid(std::vector<Line> lines, cv::Size size)
 	return smoothenGrid(mesh, size);
 }
 
-
-
 Grid CellExtractor::smoothenGrid(Grid mesh, cv::Size size)
 {
 	Grid newMesh;
+	auto horizontalLines = filterHorizontalLines(mesh.horizontalLines, size.width);
+	std::sort(horizontalLines.begin(), horizontalLines.end(), [](Line a, Line b) -> bool {return a.start().y < b.start().y; });
+	newMesh.horizontalLines = horizontalLines;
 
-	newMesh.horizontalLines = filterHorizontalLines(mesh.horizontalLines, size.width);
-	newMesh.verticalLines = filterVerticalLines(mesh.verticalLines, size.height);
+	auto verticalLines = filterVerticalLines(mesh.verticalLines, size.height);
+	std::sort(verticalLines.begin(), verticalLines.end(), [](Line a, Line b) -> bool {return a.start().x < b.start().x; });
+	newMesh.verticalLines = verticalLines;
 
 	return newMesh;
+}
+
+Mesh Grid::toMesh() {
+	Mesh mesh;
+	for (auto horizLine : this->horizontalLines) {
+		std::vector<cv::Point> columns;
+		for (auto vertLine : this->verticalLines) {
+			cv::Point p(vertLine.start().x, horizLine.start().y);
+			columns.push_back(p);
+		}
+
+		mesh.push_back(columns);
+	}
+
+	return mesh;
 }
 
 std::vector<Line> CellExtractor::filterHorizontalLines(std::vector<Line> lines, int maxSize) {
@@ -164,7 +188,6 @@ std::vector<Line> CellExtractor::filterHorizontalLines(std::vector<Line> lines, 
 	return filterLines;
 }
 
-
 std::vector<Line> CellExtractor::filterVerticalLines(std::vector<Line> lines, int maxSize) {
 	std::vector<Line> filterLines;
 	std::sort(lines.begin(), lines.end(), [](Line a, Line b) -> bool { return a[0] < b[0];  });
@@ -182,4 +205,22 @@ std::vector<Line> CellExtractor::filterVerticalLines(std::vector<Line> lines, in
 	}
 
 	return filterLines;
+}
+
+CellMatrix CellExtractor::getCellsFromMesh(cv::Mat mat, Mesh mesh) {
+	CellMatrix matrix;
+	for (int r = 0; r < mesh.size() - 1; r++) {
+		cv::vector<cv::Mat> columns;
+		for (int c = 0; c < mesh[r].size() - 1; c++) {
+			cv::Point p = mesh[r][c];
+			int dx = mesh[r][c + 1].x - p.x;
+			int dy = mesh[r + 1][c].y - p.y;
+			cv::Mat cell = mat(cv::Rect(p.x, p.y, dx, dy));
+			columns.push_back(cell);
+		}
+
+		matrix.push_back(columns);
+	}
+
+	return matrix;
 }
